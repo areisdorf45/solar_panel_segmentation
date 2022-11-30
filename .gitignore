@@ -7,5 +7,9 @@ raw_data/
 *.csv
 **/__pycache__/
 .env
-*.pdf
+raw_data/
+.python-version
 *.tif
+*.png
+*.jpg
+*.pdf
