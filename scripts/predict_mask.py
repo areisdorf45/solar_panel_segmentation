@@ -18,7 +18,7 @@ def predict_mask (model, file, input_size):
     for x in x_indices:
         for y in y_indices:
             split = image[y:(y + input_size), x:(x + input_size), :]
-            array = np.array(split / 255)
+            array = np.array(split)
             tiles.append(array)
 
     predict_set = np.array(tiles)
