@@ -1,0 +1,2 @@
+model_checkpoint_path: "loss_sum_trainingset"
+all_model_checkpoint_paths: "loss_sum_trainingset"
