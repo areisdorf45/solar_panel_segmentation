@@ -114,7 +114,7 @@ jupyterlab-pygments==0.1.2
 jupyterlab-server==2.10.2
 jupyterlab-widgets==1.0.2
 kaggle==1.5.12
-keras==2.11.0
+keras==2.8.3
 Keras-Preprocessing==1.1.2
 kiwisolver==1.3.2
 lazy-object-proxy==1.7.1
