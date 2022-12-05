@@ -13,3 +13,4 @@ raw_data/
 *.png
 *.jpg
 *.pdf
+.env
