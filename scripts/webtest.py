@@ -10,6 +10,14 @@ import keras.backend as K
 import cv2 as cv
 from skimage import io
 import matplotlib.pyplot as plt
+import googlemaps
+from datetime import datetime
+import os.path
+from dotenv import load_dotenv, find_dotenv
+
+env_path = load_dotenv()
+password = os.getenv("GOOGLE_MAPS")
+gmaps = googlemaps.Client(key=password)
 
 def conv_block(inputs, num_filters):
     x = Conv2D(num_filters, (3,3), padding="same")(inputs)
@@ -80,15 +88,25 @@ def build_unet(img_height, img_width, channels):
 
     return model
 
+
 def predict_mask (model, file, input_size):
     image = io.imread(file)
-
+    image = image[:, :, :3]
     height = image.shape[0]
     width = image.shape[1]
 
-    y_indices = np.arange(0, height - input_size, input_size)
+
+    if height % input_size == 0:
+        y_indices = np.arange(0, height, input_size)
+    else:
+        y_indices = np.arange(0, height - input_size, input_size)
+
+    if width % input_size == 0:
+        x_indices = np.arange(0, width, input_size)
+    else:
+        x_indices = np.arange(0, width - input_size, input_size)
+
     rows = len(y_indices)
-    x_indices = np.arange(0, width - input_size, input_size)
     columns = len(x_indices)
 
     tiles = []
@@ -120,22 +138,56 @@ def predict_mask (model, file, input_size):
 model = build_unet(256, 256, 3)
 model.load_weights('/home/wilsontown/code/areisdorf45/solar_panel_segmentation/model_weights/loss_sum_trainingset')
 
-st.title('Solar panel segmentation')
+tab1, tab2 = st.tabs(['From file', 'From web'])
 
-testfile = st.file_uploader('Select an image file', type=['png', 'jpg', 'tif'])
+try:
 
-col1, col2 = st.columns(2)
+    st.sidebar.image('/home/wilsontown/code/areisdorf45/solar_panel_segmentation/raw_data/logo.png')
+    st.sidebar.markdown("""<span style="word-wrap:break-word;">Building footprint identification from satellite images""", unsafe_allow_html=True)
 
-if testfile is not None:
-    col1.image(testfile)
+    with tab1:
+        st.image('/home/wilsontown/code/areisdorf45/solar_panel_segmentation/raw_data/banner.png')
+        st.title('Solar panel segmentation')
+        testfile = st.file_uploader('Select an image file', type=['png', 'jpg', 'tif'])
 
-result = predict_mask(model, testfile, 256)
+        col1, col2 = st.columns(2)
 
-percent = (np.sum(result) / (4864 * 4864)) * 100
-area = np.sum(result) * (0.3 * 0.3)
+        if testfile is not None:
+            col1.image(testfile)
 
-col2.image(result)
+            result = predict_mask(model, testfile, 256)
 
-col2.header('Roof area statistics')
-col2.text(f'Percentage roofspace: {percent}')
-col2.text(f'Roofspace area: {area} m^3')
+            percent = (np.sum(result) / (4864 * 4864)) * 100
+            percent = round(percent, 1)
+            area = np.sum(result) * (0.3 * 0.3)
+            area = round(area)
+
+            col2.image(result)
+
+            col2.text(f'Percentage roofspace: {percent} %')
+            col2.text(f'Roofspace area: {area} m^2')
+
+    with tab2:
+        st.image('/home/wilsontown/code/areisdorf45/solar_panel_segmentation/raw_data/banner.png')
+        st.title('Solar panel segmentation')
+
+        place = st.text_input("Please enter a location")
+
+        if place is not None:
+            geocode_result = gmaps.geocode(place)
+
+            lat = geocode_result[0]['geometry']['location']['lat']
+            lon = geocode_result[0]['geometry']['location']['lng']
+
+            sat = f'https://maps.googleapis.com/maps/api/staticmap?center={lat},{lon}&format=jpg&zoom=17&size=640x640&scale=2&maptype=satellite&key={password}'
+
+            col1, col2 = st.columns(2)
+
+            col1.image(sat)
+
+            mask = predict_mask(model, sat, 256)
+
+            col2.image(mask)
+
+except:
+    pass
