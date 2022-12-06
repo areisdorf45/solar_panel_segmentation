@@ -270,3 +270,5 @@ XlsxWriter==3.0.2
 yapf==0.32.0
 yarl==1.7.2
 zipp==3.7.0
+python-dotenv
+streamlit
